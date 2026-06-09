@@ -5,91 +5,158 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_screen_gradient"
+    android:fillViewport="true"
     tools:context=".MainActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
         android:orientation="vertical"
         android:padding="22dp">
-
-        <ImageView
-            android:layout_width="86dp"
-            android:layout_height="86dp"
-            android:layout_gravity="center_horizontal"
-            android:contentDescription="App icon"
-            android:src="@drawable/ic_ai_bot" />
-
-        <TextView
-            android:id="@+id/titleText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:gravity="center"
-            android:text="On-Device AI Chatbot"
-            android:textColor="@color/text_primary"
-            android:textSize="28sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/subtitleText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:text="Download small LiteRT-LM models from Hugging Face, save them locally, then chat with internet search context."
-            android:textColor="@color/text_secondary"
-            android:textSize="15sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:background="@drawable/bg_card"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:background="@drawable/bg_hero_card"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
 
-            <ImageView
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:contentDescription="Local storage"
-                android:src="@drawable/ic_storage" />
+            <FrameLayout
+                android:layout_width="104dp"
+                android:layout_height="104dp"
+                android:background="@drawable/bg_splash_icon_halo"
+                android:padding="18dp">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/app_icon_content_description"
+                    android:src="@drawable/ic_ai_bot" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/titleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:text="On-Device AI Chatbot"
+                android:textColor="@color/text_primary"
+                android:textSize="30sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/subtitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:gravity="center"
+                android:text="Download LiteRT-LM chat models, keep them on your phone, and chat with optional internet search context."
+                android:textColor="@color/text_secondary"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:background="@drawable/bg_author_pill"
+                android:text="@string/written_by_dr_vahid"
+                android:textColor="@color/primary_dark"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginEnd="6dp"
                 android:layout_weight="1"
+                android:background="@drawable/bg_card"
+                android:gravity="center"
                 android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Local repository"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                <ImageView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:contentDescription="Local storage"
+                    android:src="@drawable/ic_storage" />
 
                 <TextView
                     android:id="@+id/localStatusText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
                     android:text="0 local chat models ready"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_card"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="App Info"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/appVersionText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:text="Version 1.0"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center"
+                    android:text="@string/written_by_vahid"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:text="Main Menu"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/repositoryButton"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="22dp"
+            android:layout_height="58dp"
+            android:layout_marginTop="10dp"
             android:background="@drawable/bg_primary_button"
             android:drawableStart="@drawable/ic_cloud_download"
             android:drawablePadding="10dp"
-            android:text="Model Repository / Download"
+            android:text="Browse &amp; Download Models"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textSize="16sp" />
@@ -97,12 +164,12 @@
         <Button
             android:id="@+id/chatButton"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="58dp"
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_secondary_button"
             android:drawableStart="@drawable/ic_chat_bubble"
             android:drawablePadding="10dp"
-            android:text="Local Model Chat"
+            android:text="Start Local Model Chat"
             android:textAllCaps="false"
             android:textColor="@color/primary_dark"
             android:textSize="16sp" />
@@ -111,9 +178,9 @@
             android:id="@+id/helpText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="22dp"
             android:background="@drawable/bg_card"
-            android:text="Tip: start with Qwen3-0.6B or SmolLM. The repository screen now shows more LiteRT Community models, but it keeps only .litertlm chat files below 1 GB so they can run locally on a phone."
+            android:text="Tip: start with Qwen3-0.6B or SmolLM. The repository filters for .litertlm chat files below 1 GB so they can run locally on a phone."
             android:textColor="@color/text_secondary"
             android:textSize="13sp" />
     </LinearLayout>

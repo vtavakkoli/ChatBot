@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">LiteRT Chat</string>
+    <string name="app_icon_content_description">App icon</string>
+    <string name="splash_tagline">Private local AI chat with smart model downloads</string>
+    <string name="written_by_dr_vahid">Written by Dr. Vahid Tavakkoli 2026</string>
+    <string name="written_by_vahid">Written by Vahid Tavakkoli 2026</string>
 </resources>
