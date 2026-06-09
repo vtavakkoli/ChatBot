@@ -1,4 +1,4 @@
-package com.example.chatbot;
+package ai.chatbot.litert;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.example.chatbot", appContext.getPackageName());
+        assertEquals("ai.chatbot.litert", appContext.getPackageName());
     }
 }

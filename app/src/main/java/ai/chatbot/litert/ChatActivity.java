@@ -1,4 +1,4 @@
-package com.example.chatbot;
+package ai.chatbot.litert;
 
 import android.content.Context;
 import android.content.ClipData;

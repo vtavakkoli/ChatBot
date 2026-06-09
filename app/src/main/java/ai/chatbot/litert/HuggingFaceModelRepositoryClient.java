@@ -1,4 +1,4 @@
-package com.example.chatbot;
+package ai.chatbot.litert;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

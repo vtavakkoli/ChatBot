@@ -1,4 +1,4 @@
-package com.example.chatbot;
+package ai.chatbot.litert;
 
 import android.content.Intent;
 import android.content.pm.PackageInfo;

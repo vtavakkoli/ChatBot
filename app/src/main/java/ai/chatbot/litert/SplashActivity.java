@@ -1,4 +1,8 @@
+<<<<<<< HEAD:app/src/main/java/ai/chatbot/litert/SplashActivity.java
+package ai.chatbot.litert;
+=======
 package com.example.chatbot;
+>>>>>>> main:app/src/main/java/com/example/chatbot/SplashActivity.java
 
 import android.content.Intent;
 import android.os.Bundle;
