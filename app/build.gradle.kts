@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.chatbot"
+    namespace = "ai.chatbot.litert"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -11,7 +11,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.chatbot"
+        applicationId = "ai.chatbot.litert"
         minSdk = 27
         targetSdk = 36
         versionCode = 1

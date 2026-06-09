@@ -1,4 +1,4 @@
-package com.example.chatbot;
+package ai.chatbot.litert;
 
 import android.os.Bundle;
 import android.os.Handler;

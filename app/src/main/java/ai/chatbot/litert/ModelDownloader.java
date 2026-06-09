@@ -1,4 +1,4 @@
-package com.example.chatbot;
+package ai.chatbot.litert;
 
 import java.io.BufferedInputStream;
 import java.io.File;
