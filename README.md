@@ -9,7 +9,8 @@
   <img alt="LiteRT" src="https://img.shields.io/badge/Google%20AI%20Edge-LiteRT--LM-4285F4?logo=google&logoColor=white">
   <img alt="On device AI" src="https://img.shields.io/badge/On--device-AI-7E57C2">
   <img alt="RAG" src="https://img.shields.io/badge/Web-RAG-009688">
-  <img alt="License" src="https://img.shields.io/badge/License-MIT-lightgrey">
+  <img alt="License" src="https://img.shields.io/badge/License-Educational%20Use%202026-lightgrey">
+  <img alt="Author" src="https://img.shields.io/badge/Author-Dr.%20Vahid%20Tavakkoli-0A66C2">
 </p>
 
 ---
@@ -19,6 +20,10 @@
 **LiteRT Local RAG Chatbot** is a native Android application for experimenting with small on-device language models. The app can download compatible `.litertlm` chat models from the `litert-community` Hugging Face repositories, store them locally on the phone, load them with Google AI Edge LiteRT-LM, and answer user questions without sending the conversation to a cloud LLM.
 
 For current or knowledge-based questions, the app can optionally perform an **agentic web search** first, extract useful page evidence, and pass the compressed context to the local model as RAG input.
+
+> **Author:** Dr. Vahid Tavakkoli  
+> **Year:** 2026  
+> **Purpose:** Educational and research use.
 
 ---
 
@@ -153,7 +158,8 @@ ChatBot-main/
 ├── gradle/
 ├── build.gradle.kts
 ├── settings.gradle.kts
-└── README.md
+├── README.md
+└── LICENSE
 ```
 
 ---
@@ -242,5 +248,23 @@ For live numeric facts such as prices, exchange rates, weather, or stock values,
 - [ ] Safer prompt templates for small models.
 - [ ] Model benchmark screen for speed and memory usage.
 
--- Hugging Face and the `litert-community` model repositories.
+---
+
+## License
+
+This project is released under a custom **Educational Use License**.
+
+Copyright (c) 2026 **Dr. Vahid Tavakkoli**.
+
+The project is provided for **educational, teaching, research, and non-commercial demonstration purposes**. Commercial use, resale, paid redistribution, or production-service use requires prior written permission from the copyright holder.
+
+See the [`LICENSE`](LICENSE) file for the full license text.
+
+Third-party libraries and downloadable machine-learning models are governed by their own licenses. In particular, Hugging Face models may require separate license acceptance before use.
+---
+
+## Acknowledgements
+
+- Google AI Edge LiteRT-LM for on-device language model execution.
+- Hugging Face and the `litert-community` model repositories.
 - Open-source Android and Java ecosystem.
