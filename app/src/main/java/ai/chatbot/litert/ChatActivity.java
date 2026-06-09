@@ -559,21 +559,37 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private SpannableStringBuilder replaceMarkdownLinksWithClickableText(String raw) {
+        String input = raw == null ? "" : raw;
         SpannableStringBuilder out = new SpannableStringBuilder();
-        Matcher matcher = Pattern.compile("\\[([^\\]\\n]{1,140})\\]\\((https?://[^\\s)]+)\\)").matcher(raw == null ? "" : raw);
+        Pattern markdownLinkPattern = Pattern.compile(
+                "\\[([^\\]\\n]{1,160})\\]\\((?:<([^>\\n]+)>|((?:https?://)[^\\s\\n]+))\\)"
+        );
+        Matcher matcher = markdownLinkPattern.matcher(input);
         int cursor = 0;
         while (matcher.find()) {
-            out.append(raw, cursor, matcher.start());
+            out.append(input, cursor, matcher.start());
             int start = out.length();
             String label = matcher.group(1).trim();
-            String url = matcher.group(2).trim();
+            String url = firstNonEmpty(matcher.group(2), matcher.group(3)).trim();
+            // Some old/plain Markdown links can include the final ')' in the captured URL.
+            if (url.endsWith(")") && matcher.group(2) == null) {
+                url = url.substring(0, url.length() - 1);
+            }
             out.append(label.isEmpty() ? "open source" : label);
             int end = out.length();
             out.setSpan(new URLSpan(url), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             cursor = matcher.end();
         }
-        out.append(raw, cursor, raw.length());
+        out.append(input, cursor, input.length());
         return out;
+    }
+
+    private String firstNonEmpty(String... values) {
+        if (values == null) return "";
+        for (String value : values) {
+            if (value != null && !value.trim().isEmpty()) return value;
+        }
+        return "";
     }
 
     private void applySourceCitationLinks(SpannableStringBuilder spannable, InternetSearchClient.SearchResult searchResult) {

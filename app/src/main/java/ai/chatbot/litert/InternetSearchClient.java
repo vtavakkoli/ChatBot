@@ -327,14 +327,15 @@ public class InternetSearchClient {
             while (m.find() && found < 8) {
                 String block = m.group(1);
                 String title = xmlTag(block, "title");
-                String link = xmlTag(block, "link");
+                String link = normalizeNewsUrl(xmlTag(block, "link"));
                 String desc = removeUrls(stripHtml(xmlTag(block, "description")));
                 String date = xmlTag(block, "pubDate");
                 if (!title.isEmpty()) {
                     String cleanTitle = stripHtml(title);
                     // For live price queries, old prediction articles are harmful evidence.
                     if (looksCurrentQuestion(query) && looksStaleNewsTitle(cleanTitle)) continue;
-                    items.add(new SearchItem(cleanTitle, clean(desc + " " + date), shorten(link, 180), "Google News RSS"));
+                    // Keep the complete RSS link. Cropping this URL breaks Google News article links.
+                    items.add(new SearchItem(cleanTitle, clean(desc + " " + date), link, "Google News RSS"));
                     found++;
                 }
             }
@@ -665,7 +666,7 @@ public class InternetSearchClient {
         }
         int i = 1;
         for (TextChunk c : chunks) {
-            String url = c.item.finalUrl.isEmpty() ? c.item.url : c.item.finalUrl;
+            String url = sourceUrl(c.item);
             String title = c.item.title.isEmpty() ? "Untitled source" : c.item.title;
             d.append("[S").append(i).append("] ").append(markdownLink(title, url)).append("\n");
             d.append("   ").append(c.item.source).append(" · ").append(c.item.fetchStatus).append(" · score ").append(String.format(Locale.US, "%.2f", c.score)).append("\n");
@@ -688,14 +689,14 @@ public class InternetSearchClient {
         List<SourceLink> links = new ArrayList<>();
         int i = 1;
         for (TextChunk c : chunks) {
-            String url = c.item.finalUrl.isEmpty() ? c.item.url : c.item.finalUrl;
+            String url = sourceUrl(c.item);
             String title = c.item.title.isEmpty() ? "Untitled source" : c.item.title;
             if (!url.isEmpty()) links.add(new SourceLink("S" + i, title, url, c.item.source));
             i++;
         }
         int j = 1;
         for (ImageSource img : images) {
-            String pageUrl = img.pageUrl.isEmpty() ? img.imageUrl : img.pageUrl;
+            String pageUrl = safeClickableUrl(img.pageUrl.isEmpty() ? img.imageUrl : img.pageUrl);
             String title = img.pageTitle.isEmpty() ? "Image evidence" : img.pageTitle;
             if (!pageUrl.isEmpty()) links.add(new SourceLink("I" + j, title, pageUrl, "Image evidence"));
             j++;
@@ -703,11 +704,17 @@ public class InternetSearchClient {
         return links;
     }
 
+    private String sourceUrl(SearchItem item) {
+        if (item == null) return "";
+        return safeClickableUrl(item.finalUrl.isEmpty() ? item.url : item.finalUrl);
+    }
+
     private String markdownLink(String label, String url) {
         String cleanLabel = clean(label).replace("[", "(").replace("]", ")");
-        String cleanUrl = clean(url);
+        String cleanUrl = safeClickableUrl(url);
         if (cleanUrl.isEmpty()) return cleanLabel;
-        return "[" + cleanLabel + "](" + cleanUrl + ")";
+        // Use angle-bracket Markdown URLs so long news links containing ')' are not parsed as cropped links.
+        return "[" + cleanLabel + "](<" + cleanUrl.replace(">", "%3E") + ">)";
     }
 
     private double scoreText(String text, String hint, List<String> terms, String fullQuery) {
@@ -871,6 +878,20 @@ public class InternetSearchClient {
     private static boolean looksCurrentQuestion(String q) {
         String l = q.toLowerCase(Locale.US);
         return containsAny(l, "latest", "today", "now", "current", "news", "price", "stock", "weather", "score", "2026", "2027", "breaking");
+    }
+
+    private static String normalizeNewsUrl(String href) {
+        String v = safeClickableUrl(href);
+        if (v.startsWith("//")) return "https:" + v;
+        return v;
+    }
+
+    private static String safeClickableUrl(String url) {
+        String v = decodeHtml(clean(url));
+        if (v.isEmpty()) return "";
+        // Do not shorten here: source links must remain complete and browser-openable.
+        v = v.replace(" ", "%20");
+        return v;
     }
 
     private static String normalizeDuckDuckGoUrl(String href) {
