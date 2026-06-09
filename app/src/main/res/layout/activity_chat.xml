@@ -72,7 +72,7 @@
                 android:background="@drawable/bg_secondary_button"
                 android:text="Refresh local"
                 android:textAllCaps="false"
-                android:textColor="@color/primary_dark" />
+                android:textColor="@color/white" />
 
             <Button
                 android:id="@+id/loadSelectedButton"

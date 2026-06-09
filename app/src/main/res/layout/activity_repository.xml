@@ -45,7 +45,7 @@
                 android:background="@drawable/bg_secondary_button"
                 android:text="Refresh"
                 android:textAllCaps="false"
-                android:textColor="@color/primary_dark" />
+                android:textColor="@color/white" />
 
             <Button
                 android:id="@+id/downloadSelectedButton"
@@ -89,7 +89,7 @@
                 android:minWidth="72dp"
                 android:text="Clear"
                 android:textAllCaps="false"
-                android:textColor="@color/primary_dark" />
+                android:textColor="@color/white" />
         </LinearLayout>
 
         <ProgressBar
