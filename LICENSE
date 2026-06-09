@@ -1,0 +1,17 @@
+Educational Use License
+
+Copyright (c) 2026 Dr. Vahid Tavakkoli
+
+This project is provided for educational, teaching, research, and non-commercial demonstration purposes.
+
+Permission is granted to use, copy, modify, and distribute this software and its documentation for educational and research purposes, provided that this copyright notice and license text are included in all copies or substantial portions of the project.
+
+Commercial use, resale, paid redistribution, or use as a production service requires prior written permission from the copyright holder.
+
+This project may use third-party libraries, frameworks, tools, and downloadable machine-learning models. Those components are governed by their own licenses and terms. In particular, models downloaded from Hugging Face or other providers may require separate license acceptance and must be used according to their original model licenses.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.
+
+Author: Dr. Vahid Tavakkoli
+Year: 2026
+Purpose: Educational use
