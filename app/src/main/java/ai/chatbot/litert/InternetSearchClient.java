@@ -54,6 +54,7 @@ public class InternetSearchClient {
         public final String displayText;
         public final boolean hasUsefulResults;
         public final List<ImageSource> imageSources;
+        public final List<SourceLink> sourceLinks;
 
         /**
          * If non-empty, this is a deterministic answer produced from structured data
@@ -63,19 +64,47 @@ public class InternetSearchClient {
         public final String directAnswer;
 
         public SearchResult(String contextForPrompt, String displayText, boolean hasUsefulResults) {
-            this(contextForPrompt, displayText, hasUsefulResults, new ArrayList<ImageSource>(), "");
+            this(contextForPrompt, displayText, hasUsefulResults, new ArrayList<ImageSource>(), "", new ArrayList<SourceLink>());
         }
 
         public SearchResult(String contextForPrompt, String displayText, boolean hasUsefulResults, List<ImageSource> imageSources) {
-            this(contextForPrompt, displayText, hasUsefulResults, imageSources, "");
+            this(contextForPrompt, displayText, hasUsefulResults, imageSources, "", new ArrayList<SourceLink>());
         }
 
         public SearchResult(String contextForPrompt, String displayText, boolean hasUsefulResults, List<ImageSource> imageSources, String directAnswer) {
+            this(contextForPrompt, displayText, hasUsefulResults, imageSources, directAnswer, new ArrayList<SourceLink>());
+        }
+
+        public SearchResult(String contextForPrompt, String displayText, boolean hasUsefulResults, List<ImageSource> imageSources, String directAnswer, List<SourceLink> sourceLinks) {
             this.contextForPrompt = contextForPrompt;
             this.displayText = displayText;
             this.hasUsefulResults = hasUsefulResults;
             this.imageSources = imageSources == null ? new ArrayList<ImageSource>() : imageSources;
             this.directAnswer = directAnswer == null ? "" : directAnswer;
+            this.sourceLinks = sourceLinks == null ? new ArrayList<SourceLink>() : sourceLinks;
+        }
+
+        public Map<String, String> sourceLinksByLabel() {
+            Map<String, String> links = new LinkedHashMap<>();
+            for (SourceLink sourceLink : sourceLinks) {
+                if (sourceLink == null || sourceLink.label.isEmpty() || sourceLink.url.isEmpty()) continue;
+                links.put(sourceLink.label, sourceLink.url);
+            }
+            return links;
+        }
+    }
+
+    public static class SourceLink {
+        public final String label;
+        public final String title;
+        public final String url;
+        public final String sourceType;
+
+        SourceLink(String label, String title, String url, String sourceType) {
+            this.label = clean(label);
+            this.title = clean(title);
+            this.url = clean(url);
+            this.sourceType = clean(sourceType);
         }
     }
 
@@ -163,7 +192,8 @@ public class InternetSearchClient {
             a.append(label).append(": ").append(price);
             if (!currency.isEmpty()) a.append(" ").append(currency);
             if (!timestamp.isEmpty()) a.append(" (latest available timestamp: ").append(timestamp).append(")");
-            if (!provider.isEmpty()) a.append(". Source: ").append(provider).append(".");
+            if (!provider.isEmpty()) a.append(". Source: ").append(provider).append(" [S1].");
+            else a.append(". Source: [S1].");
             a.append(" Market data may be delayed.");
             return clean(a.toString());
         }
@@ -211,12 +241,14 @@ public class InternetSearchClient {
         }
 
         String directAnswer = directQuote == null ? "" : directQuote.answer();
+        List<SourceLink> sourceLinks = buildSourceLinks(topChunks, topImages);
         return new SearchResult(
                 buildPromptContext(q, topChunks, topImages, debug, directAnswer),
                 buildDisplayText(topChunks, topImages, debug, directAnswer),
                 true,
                 topImages,
-                directAnswer
+                directAnswer,
+                sourceLinks
         );
     }
 
@@ -634,21 +666,48 @@ public class InternetSearchClient {
         int i = 1;
         for (TextChunk c : chunks) {
             String url = c.item.finalUrl.isEmpty() ? c.item.url : c.item.finalUrl;
-            d.append("S").append(i).append(". ").append(c.item.title.isEmpty() ? "Untitled source" : c.item.title).append("\n");
+            String title = c.item.title.isEmpty() ? "Untitled source" : c.item.title;
+            d.append("[S").append(i).append("] ").append(markdownLink(title, url)).append("\n");
             d.append("   ").append(c.item.source).append(" · ").append(c.item.fetchStatus).append(" · score ").append(String.format(Locale.US, "%.2f", c.score)).append("\n");
             d.append("   ").append(shorten(c.text, 230)).append("\n");
-            if (!url.isEmpty()) d.append("   URL: ").append(shorten(url, 110)).append("\n");
             i++;
         }
         int j = 1;
         for (ImageSource img : images) {
-            d.append("\nI").append(j).append(". Image evidence from ").append(img.pageTitle.isEmpty() ? "source page" : img.pageTitle).append("\n");
+            String title = img.pageTitle.isEmpty() ? "Image evidence" : "Image evidence from " + img.pageTitle;
+            d.append("\n[I").append(j).append("] ").append(markdownLink(title, img.pageUrl)).append("\n");
             d.append("   score ").append(String.format(Locale.US, "%.2f", img.score)).append(" · ").append(shorten(clean(img.altText + ". " + img.captionOrNearbyText), 210)).append("\n");
-            d.append("   Image URL: ").append(shorten(img.imageUrl, 110)).append("\n");
+            if (!img.imageUrl.isEmpty()) d.append("   ").append(markdownLink("open image", img.imageUrl)).append("\n");
             j++;
         }
         if (!debug.isEmpty()) d.append("\nNotes: ").append(shorten(join(debug, "; "), 500));
         return d.toString().trim();
+    }
+
+    private List<SourceLink> buildSourceLinks(List<TextChunk> chunks, List<ImageSource> images) {
+        List<SourceLink> links = new ArrayList<>();
+        int i = 1;
+        for (TextChunk c : chunks) {
+            String url = c.item.finalUrl.isEmpty() ? c.item.url : c.item.finalUrl;
+            String title = c.item.title.isEmpty() ? "Untitled source" : c.item.title;
+            if (!url.isEmpty()) links.add(new SourceLink("S" + i, title, url, c.item.source));
+            i++;
+        }
+        int j = 1;
+        for (ImageSource img : images) {
+            String pageUrl = img.pageUrl.isEmpty() ? img.imageUrl : img.pageUrl;
+            String title = img.pageTitle.isEmpty() ? "Image evidence" : img.pageTitle;
+            if (!pageUrl.isEmpty()) links.add(new SourceLink("I" + j, title, pageUrl, "Image evidence"));
+            j++;
+        }
+        return links;
+    }
+
+    private String markdownLink(String label, String url) {
+        String cleanLabel = clean(label).replace("[", "(").replace("]", ")");
+        String cleanUrl = clean(url);
+        if (cleanUrl.isEmpty()) return cleanLabel;
+        return "[" + cleanLabel + "](" + cleanUrl + ")";
     }
 
     private double scoreText(String text, String hint, List<String> terms, String fullQuery) {

@@ -4,12 +4,14 @@ import android.content.Context;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.graphics.Typeface;
-import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
 import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.text.style.TypefaceSpan;
+import android.text.style.URLSpan;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -39,6 +41,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -307,7 +310,7 @@ public class ChatActivity extends AppCompatActivity {
             String context = limitText(searchResult.contextForPrompt, MAX_SEARCH_CONTEXT_CHARS);
             String prompt = "Answer using the compressed agentic web context. " +
                     "The app searched DuckDuckGo, checked up to 10 links, and kept only relevant snippets because the local model has a small input limit. " +
-                    "Use source numbers like [1], [2]. If evidence is weak, say so. " +
+                    "Use source labels exactly like [S1], [S2]. If evidence is weak, say so. " +
                     "Do not output <think> tags. Return only the final answer. " +
                     "Use fenced Markdown code blocks for code. Keep it short.\n\n" +
                     "WEB CONTEXT:\n" + context + "\n\n" +
@@ -323,7 +326,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private String buildRetryPrompt(String question, InternetSearchClient.SearchResult searchResult, boolean useSearch) {
         if (useSearch) {
-            return "Answer shortly using this very small web context. Cite [1] if useful. " +
+            return "Answer shortly using this very small web context. Cite [S1] if useful. " +
                     "No <think> tags.\n\n" +
                     limitText(searchResult.contextForPrompt, MAX_RETRY_CONTEXT_CHARS) +
                     "\n\nQuestion: " + limitText(question, 350) +
@@ -349,15 +352,19 @@ public class ChatActivity extends AppCompatActivity {
             addMessageCard("Model thinking", parts.thinking, R.drawable.bg_think_message, Gravity.START, true);
         }
         String answer = parts.answer.isEmpty() ? rawMessage : parts.answer;
-        addMessageCard("Bot", answer, R.drawable.bg_bot_message, Gravity.START, false);
+        addMessageCard("Bot", answer, R.drawable.bg_bot_message, Gravity.START, false, searchResult);
 
         if (searchResult != null) {
             String title = searchResult.hasUsefulResults ? "Web sources used" : "Web search status";
-            addMessageCard(title, searchResult.displayText, R.drawable.bg_sources_message, Gravity.START, true);
+            addMessageCard(title, searchResult.displayText, R.drawable.bg_sources_message, Gravity.START, true, searchResult);
         }
     }
 
     private void addMessageCard(String label, String body, int backgroundRes, int gravity, boolean secondary) {
+        addMessageCard(label, body, backgroundRes, gravity, secondary, null);
+    }
+
+    private void addMessageCard(String label, String body, int backgroundRes, int gravity, boolean secondary, InternetSearchClient.SearchResult searchResult) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(gravity);
@@ -395,9 +402,9 @@ public class ChatActivity extends AppCompatActivity {
         boolean isThinking = label.toLowerCase(Locale.US).contains("thinking");
         boolean shouldFormatCode = formatCodeCheckBox == null || formatCodeCheckBox.isChecked();
         if (shouldFormatCode) {
-            renderFormattedMessage(bubble, safeBody, secondary, isThinking);
+            renderFormattedMessage(bubble, safeBody, secondary, isThinking, searchResult);
         } else {
-            TextView text = createPlainTextView(safeBody, secondary, isThinking);
+            TextView text = createPlainTextView(safeBody, secondary, isThinking, searchResult);
             bubble.addView(text);
         }
 
@@ -406,7 +413,7 @@ public class ChatActivity extends AppCompatActivity {
         chatScrollView.post(() -> chatScrollView.fullScroll(View.FOCUS_DOWN));
     }
 
-    private void renderFormattedMessage(LinearLayout bubble, String body, boolean secondary, boolean isThinking) {
+    private void renderFormattedMessage(LinearLayout bubble, String body, boolean secondary, boolean isThinking, InternetSearchClient.SearchResult searchResult) {
         List<MessageSegment> segments = splitCodeBlocks(body);
         boolean added = false;
         for (MessageSegment segment : segments) {
@@ -416,24 +423,34 @@ public class ChatActivity extends AppCompatActivity {
             if (segment.code) {
                 bubble.addView(createCodeBlockView(text, segment.language));
             } else {
-                bubble.addView(createPlainTextView(text, secondary, isThinking));
+                bubble.addView(createPlainTextView(text, secondary, isThinking, searchResult));
             }
         }
         if (!added) {
-            bubble.addView(createPlainTextView("No content.", secondary, isThinking));
+            bubble.addView(createPlainTextView("No content.", secondary, isThinking, searchResult));
         }
     }
 
-    private TextView createPlainTextView(String body, boolean secondary, boolean isThinking) {
+    private TextView createPlainTextView(String body, boolean secondary, boolean isThinking, InternetSearchClient.SearchResult searchResult) {
         TextView text = new TextView(this);
         text.setTextSize(secondary ? 13 : 15);
         text.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
+        text.setLinkTextColor(ContextCompat.getColor(this, R.color.primary));
         text.setLineSpacing(0, 1.08f);
-        text.setTextIsSelectable(true);
         if (isThinking) {
             text.setTypeface(Typeface.MONOSPACE);
         }
-        text.setText(applyInlineCodeSpans(body));
+
+        SpannableStringBuilder richText = applyRichTextSpans(body, searchResult);
+        text.setText(richText);
+        if (hasClickableLinks(richText)) {
+            text.setMovementMethod(LinkMovementMethod.getInstance());
+            text.setLinksClickable(true);
+            // Selectable TextViews often consume link taps. Keep linked source cards tap-friendly.
+            text.setTextIsSelectable(false);
+        } else {
+            text.setTextIsSelectable(true);
+        }
         return text;
     }
 
@@ -534,8 +551,48 @@ public class ChatActivity extends AppCompatActivity {
         return segments;
     }
 
-    private SpannableString applyInlineCodeSpans(String text) {
-        SpannableString spannable = new SpannableString(text == null ? "" : text);
+    private SpannableStringBuilder applyRichTextSpans(String text, InternetSearchClient.SearchResult searchResult) {
+        SpannableStringBuilder spannable = replaceMarkdownLinksWithClickableText(text == null ? "" : text);
+        applySourceCitationLinks(spannable, searchResult);
+        applyInlineCodeSpans(spannable);
+        return spannable;
+    }
+
+    private SpannableStringBuilder replaceMarkdownLinksWithClickableText(String raw) {
+        SpannableStringBuilder out = new SpannableStringBuilder();
+        Matcher matcher = Pattern.compile("\\[([^\\]\\n]{1,140})\\]\\((https?://[^\\s)]+)\\)").matcher(raw == null ? "" : raw);
+        int cursor = 0;
+        while (matcher.find()) {
+            out.append(raw, cursor, matcher.start());
+            int start = out.length();
+            String label = matcher.group(1).trim();
+            String url = matcher.group(2).trim();
+            out.append(label.isEmpty() ? "open source" : label);
+            int end = out.length();
+            out.setSpan(new URLSpan(url), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            cursor = matcher.end();
+        }
+        out.append(raw, cursor, raw.length());
+        return out;
+    }
+
+    private void applySourceCitationLinks(SpannableStringBuilder spannable, InternetSearchClient.SearchResult searchResult) {
+        if (searchResult == null) return;
+        Map<String, String> sourceLinks = searchResult.sourceLinksByLabel();
+        if (sourceLinks.isEmpty()) return;
+
+        Matcher matcher = Pattern.compile("\\[(S\\d+|I\\d+)\\]").matcher(spannable.toString());
+        while (matcher.find()) {
+            String label = matcher.group(1);
+            String url = sourceLinks.get(label);
+            if (url == null || url.trim().isEmpty()) continue;
+            spannable.setSpan(new URLSpan(url), matcher.start(), matcher.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannable.setSpan(new StyleSpan(Typeface.BOLD), matcher.start(), matcher.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannable.setSpan(new ForegroundColorSpan(ContextCompat.getColor(this, R.color.primary)), matcher.start(), matcher.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+    }
+
+    private void applyInlineCodeSpans(SpannableStringBuilder spannable) {
         Matcher matcher = Pattern.compile("`([^`\\n]+)`").matcher(spannable.toString());
         while (matcher.find()) {
             int start = matcher.start();
@@ -545,7 +602,10 @@ public class ChatActivity extends AppCompatActivity {
             spannable.setSpan(new BackgroundColorSpan(ContextCompat.getColor(this, R.color.inline_code_bg)), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             spannable.setSpan(new ForegroundColorSpan(ContextCompat.getColor(this, R.color.code_text)), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
-        return spannable;
+    }
+
+    private boolean hasClickableLinks(SpannableStringBuilder spannable) {
+        return spannable.getSpans(0, spannable.length(), URLSpan.class).length > 0;
     }
 
     private void copyToClipboard(String code) {
